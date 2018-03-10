@@ -50,6 +50,10 @@ static Parameter defconfig[ParameterLast] = {
 	[ZoomLevel]           =       { { .f = 1.0 },   },
 };
 
+static UrlReplaceTag urlreptags[] = {
+    { "g", "https://www.google.com/search?q=%s" }
+};
+
 static UriParameters uriparams[] = {
 	{ "(://|\\.)suckless\\.org(/|$)", {
 	  [JavaScript] = { { .i = 0 }, 1 },

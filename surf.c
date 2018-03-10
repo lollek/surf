@@ -111,6 +111,11 @@ typedef struct Client {
 } Client;
 
 typedef struct {
+	const char *tag;
+	const char *url;
+} UrlReplaceTag;
+
+typedef struct {
 	guint mod;
 	guint keyval;
 	void (*func)(Client *c, const Arg *a);
@@ -150,6 +155,7 @@ static const char *getuserhomedir(const char *user);
 static const char *getcurrentuserhomedir(void);
 static Client *newclient(Client *c);
 static void loaduri(Client *c, const Arg *a);
+static char *geturlreptag(char const *tag);
 static const char *geturi(Client *c);
 static void setatom(Client *c, int a, const char *v);
 static const char *getatom(Client *c, int a);
@@ -522,7 +528,7 @@ void
 loaduri(Client *c, const Arg *a)
 {
 	struct stat st;
-	char *url, *path;
+	char *url, *path, *tagurl;
 	const char *uri = a->v;
 
 	if (g_strcmp0(uri, "") == 0)
@@ -536,6 +542,8 @@ loaduri(Client *c, const Arg *a)
 	} else if (!stat(uri, &st) && (path = realpath(uri, NULL))) {
 		url = g_strdup_printf("file://%s", path);
 		free(path);
+	} else if ((tagurl = geturlreptag(uri)) != NULL) {
+		url = tagurl;
 	} else {
 		url = g_strdup_printf("http://%s", uri);
 	}
@@ -550,6 +558,28 @@ loaduri(Client *c, const Arg *a)
 	}
 
 	g_free(url);
+}
+
+char *
+geturlreptag(char const *tag)
+{
+	int i;
+	char *tag_copy, *query, *retval = NULL;
+
+	if (strchr(tag, ' ') == NULL)
+		return NULL;
+
+	tag_copy = g_strdup(tag);
+	query = strchr(tag_copy, ' ');
+	*query++ = '\0';
+	for (i = 0; i < LENGTH(urlreptags); ++i) {
+		if (g_str_has_prefix(tag, urlreptags[i].tag)) {
+			retval = g_strdup_printf(urlreptags[i].url, query);
+			break;
+		}
+	}
+	g_free(tag_copy);
+	return retval;
 }
 
 const char *
